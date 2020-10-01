@@ -1,9 +1,10 @@
 package antonfries.konto;
 
-public class GiroKonto extends Konto {
+public class GiroKonto extends Konto implements Cloneable {
 
     private int transaktionen;
     public final String TYP = "Giro";
+    public final double KOSTEN_PRO_TRANSAKTION = 0.5;
 
     public GiroKonto(String inhaber, double betrag) {
         super(inhaber, betrag);
@@ -17,14 +18,21 @@ public class GiroKonto extends Konto {
 
     @Override
     public double abheben(double betrag) {
-        transaktionen++;
-        return super.abheben(betrag);
+        double abgehobenerBetrag = super.abheben(betrag);
+        if (abgehobenerBetrag > 0) {
+            transaktionen++;
+        }
+        return abgehobenerBetrag;
     }
 
     @Override
     public void abrechnen() {
-        // Anmerkung: Kontostand kann auch ins negative rutschen
-        betrag -= 0.5 * transaktionen; // TODO: In Konstante auslagern
+        double negativBetrag = KOSTEN_PRO_TRANSAKTION * transaktionen;
+        if (betrag - negativBetrag < 0) {
+            throw new RuntimeException("Bitte überweisen Sie genug Geld, um die Transaktions-Kosten auszugleichen!");
+        } else {
+            betrag -= negativBetrag;
+        }
     }
 
     @Override
@@ -39,5 +47,10 @@ public class GiroKonto extends Konto {
                 ", betrag=" + betrag +
                 ", nummer=" + nummer +
                 '}');
+    }
+
+    @Override
+    protected GiroKonto clone() throws CloneNotSupportedException {
+        return (GiroKonto) super.clone();
     }
 }
